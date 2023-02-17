@@ -1,24 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useEffect } from "react";
 
-
-import Card from 'react-bootstrap/Card';
-import Col from 'react-bootstrap/Col';
-import Container from 'react-bootstrap/Container';
-import Form from 'react-bootstrap/Form';
-import ListGroup from 'react-bootstrap/ListGroup';
-import Row from 'react-bootstrap/Row';
-import { LinkContainer } from 'react-router-bootstrap';
+import Card from "react-bootstrap/Card";
+import Col from "react-bootstrap/Col";
+import Container from "react-bootstrap/Container";
+import Form from "react-bootstrap/Form";
+import ListGroup from "react-bootstrap/ListGroup";
+import Spinner from "react-bootstrap/Spinner";
+import Row from "react-bootstrap/Row";
+import { useDispatch, useSelector } from "react-redux";
+import { LinkContainer } from "react-router-bootstrap";
+import { useInRouterContext } from "react-router-dom";
+import { initializeCountries } from "../features/countries/countriesSlice";
+import favouritesSlice, {
+  addFavourites,
+  getFavourites,
+  clearFavourites,
+} from "../features/countries/favouritesSlice";
 
 const Countries = () => {
-  const [search, setSearch] = useState('')
+  const dispatch = useDispatch();
+  const favouritesList = useSelector((state) => state.favourites.favourites);
+  const countriesList = useSelector((state) => state.countries.countries);
+  const loading = useSelector((state) => state.countries.isLoading);
+  const [search, setSearch] = useState("");
 
-  console.log("Search: ", search)
+  useEffect(() => {
+    dispatch(initializeCountries());
+  }, [dispatch]);
 
   // We will be replacing this with data from our API.
   const country = {
     name: {
-      common: 'Example Country'
-    }
+      common: "Example Country",
+    },
+  };
+
+  if (loading) {
+    return (
+      <Col className="text-center m-5">
+        <Spinner
+          animation="border"
+          role="status"
+          className="center"
+          variant="info"
+        >
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Col>
+    );
   }
 
   return (
@@ -27,7 +57,7 @@ const Countries = () => {
         <Col className="mt-5 d-flex justify-content-center">
           <Form>
             <Form.Control
-              style={{ width: '18rem' }}
+              style={{ width: "18rem" }}
               type="search"
               className="me-2 "
               placeholder="Search for countries"
@@ -38,16 +68,42 @@ const Countries = () => {
         </Col>
       </Row>
       <Row xs={2} md={3} lg={4} className=" g-3">
+        {countriesList
+          .filter((c) => {
+            return c.name.common.toLowerCase().includes(search.toLowerCase());
+          })
+          .map((country) => (
             <Col className="mt-5">
               <LinkContainer
                 to={`/countries/${country.name.common}`}
                 state={{ country: country }}
               >
                 <Card className="h-100">
+                  {favouritesList.includes(country.name.common) ? (
+                    <i
+                      class="bi bi-heart-fill text-danger m-1 p-1"
+                      onClick={() =>
+                        dispatch(clearFavourites(country.name.common))
+                      }
+                    ></i>
+                  ) : (
+                    <i
+                      class="bi bi-heart text-danger m-1 p-1"
+                      onClick={() =>
+                        dispatch(addFavourites(country.name.common))
+                      }
+                    ></i>
+                  )}
+                  <Card.Img
+                    variant="top"
+                    src={country.flags.png}
+                    height="200px"
+                    width="60px"
+                  />
                   <Card.Body className="d-flex flex-column">
-                    <Card.Title>{'Single Country Common Name'}</Card.Title>
+                    <Card.Title>{country.name.common}</Card.Title>
                     <Card.Subtitle className="mb-5 text-muted">
-                      {'Single Country Official Name'}
+                      {country.name.official}
                     </Card.Subtitle>
                     <ListGroup
                       variant="flush"
@@ -55,19 +111,27 @@ const Countries = () => {
                     >
                       <ListGroup.Item>
                         <i className="bi bi-translate me-2"></i>
+                        {Object.values(country.languages || {})}
                       </ListGroup.Item>
                       <ListGroup.Item>
                         <i className="bi bi-cash-coin me-2"></i>
+                        {country.currencies
+                          ? Object.values(country.currencies || {})
+                              .map((currency) => currency.name)
+                              .join(",")
+                          : "--"}
                       </ListGroup.Item>
 
                       <ListGroup.Item>
                         <i className="bi bi-people me-2"></i>
+                        {country.population.toLocaleString(country.population)}
                       </ListGroup.Item>
                     </ListGroup>
                   </Card.Body>
                 </Card>
               </LinkContainer>
             </Col>
+          ))}
       </Row>
     </Container>
   );
