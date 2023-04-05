@@ -4,12 +4,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { Button, Col, Container, Image, Spinner } from "react-bootstrap";
 import Row from "react-bootstrap/Row";
+import { useSelector } from "react-redux";
 
 const CountriesSingle = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const country = location.state.country;
 
+  const country = location.state.selectedCountry;
+
+  const allCountriesList = useSelector((state) => state.countries.countries);
   const [weather, setWeather] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -61,7 +64,7 @@ const CountriesSingle = () => {
           {!error && (
             <div>
               <p>
-                Right now it is<strong>{parseInt(weather.main.temp)}</strong>{" "}
+                Right now it is <strong>{parseInt(weather.main.temp)}</strong>{" "}
                 degrees in {country.capital} and{" "}
                 {weather.weather[0].description}
               </p>
@@ -71,6 +74,33 @@ const CountriesSingle = () => {
               />
             </div>
           )}
+          <div>
+            <h3>Bordering countries: </h3>
+            {country.borders ? (
+              country.borders
+                .map((borderCCa3) =>
+                  allCountriesList.find(
+                    (country) => country.cca3 === borderCCa3
+                  )
+                )
+                .map((borderCountry) => {
+                  return (
+                    <Button
+                      className="me-2 mt-2"
+                      onClick={() =>
+                        navigate(`/countries/${borderCountry.name.common}`, {
+                          state: { selectedCountry: borderCountry },
+                        })
+                      }
+                    >
+                      {borderCountry.name.common}
+                    </Button>
+                  );
+                })
+            ) : (
+              <p>No bordering countries found</p>
+            )}
+          </div>
         </Col>
       </Row>
       <Row>

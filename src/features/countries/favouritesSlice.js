@@ -11,22 +11,38 @@ export const favouritesSlice = createSlice({
     favourites: favourites,
   },
   reducers: {
-    getFavourites(state, action) {
-      localStorage.getItem("favourites", JSON.stringify(state.favourites));
+    initializeFavourites(state, action) {
+      state.favourites = JSON.parse(localStorage.getItem("favourites"));
     },
 
     addFavourites(state, action) {
       state.favourites = [...state.favourites, action.payload];
       localStorage.setItem("favourites", JSON.stringify(state.favourites));
     },
+    removeFavourites(state, action) {
+      const newArray = [...state.favourites];
+      newArray.splice(
+        newArray.findIndex((e) => e === action.payload),
+        1
+      );
+      console.log("remaining countries", newArray);
+      //localStorage.removeItem("favourites");
+      state.favourites = [...newArray];
+      localStorage.setItem("favourites", JSON.stringify(state.favourites));
+    },
+
     clearFavourites(state, action) {
-      localStorage.removeItem("favourites");
+      localStorage.removeItem("Favourites");
       state.favourites = [];
     },
   },
 });
 
-export const { getFavourites, addFavourites, clearFavourites } =
-  favouritesSlice.actions;
+export const {
+  initializeFavourites,
+  addFavourites,
+  clearFavourites,
+  removeFavourites,
+} = favouritesSlice.actions;
 
 export default favouritesSlice.reducer;

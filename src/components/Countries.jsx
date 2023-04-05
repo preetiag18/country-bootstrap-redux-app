@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useEffect } from "react";
 
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
@@ -10,12 +9,9 @@ import Spinner from "react-bootstrap/Spinner";
 import Row from "react-bootstrap/Row";
 import { useDispatch, useSelector } from "react-redux";
 import { LinkContainer } from "react-router-bootstrap";
-import { useInRouterContext } from "react-router-dom";
-import { initializeCountries } from "../features/countries/countriesSlice";
-import favouritesSlice, {
+import {
   addFavourites,
-  getFavourites,
-  clearFavourites,
+  removeFavourites,
 } from "../features/countries/favouritesSlice";
 
 const Countries = () => {
@@ -24,17 +20,6 @@ const Countries = () => {
   const countriesList = useSelector((state) => state.countries.countries);
   const loading = useSelector((state) => state.countries.isLoading);
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    dispatch(initializeCountries());
-  }, [dispatch]);
-
-  // We will be replacing this with data from our API.
-  const country = {
-    name: {
-      common: "Example Country",
-    },
-  };
 
   if (loading) {
     return (
@@ -60,7 +45,7 @@ const Countries = () => {
               style={{ width: "18rem" }}
               type="search"
               className="me-2 "
-              placeholder="Search for countries"
+              placeholder="Search country"
               aria-label="Search"
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -73,25 +58,27 @@ const Countries = () => {
             return c.name.common.toLowerCase().includes(search.toLowerCase());
           })
           .map((country) => (
-            <Col className="mt-5">
+            <Col className="mt-5" key={country.name.common}>
               <LinkContainer
                 to={`/countries/${country.name.common}`}
-                state={{ country: country }}
+                state={{ selectedCountry: country }}
               >
-                <Card className="h-100">
+                <Card className="h-100" border="primary">
                   {favouritesList.includes(country.name.common) ? (
                     <i
-                      class="bi bi-heart-fill text-danger m-1 p-1"
-                      onClick={() =>
-                        dispatch(clearFavourites(country.name.common))
-                      }
+                      className="bi bi-heart-fill text-danger m-1 p-1"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        dispatch(removeFavourites(country.name.common));
+                      }}
                     ></i>
                   ) : (
                     <i
-                      class="bi bi-heart text-danger m-1 p-1"
-                      onClick={() =>
-                        dispatch(addFavourites(country.name.common))
-                      }
+                      className="bi bi-heart text-danger m-1 p-1"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        dispatch(addFavourites(country.name.common));
+                      }}
                     ></i>
                   )}
                   <Card.Img

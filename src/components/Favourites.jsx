@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useEffect } from "react";
 
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
@@ -11,34 +10,30 @@ import Row from "react-bootstrap/Row";
 import { useDispatch, useSelector } from "react-redux";
 import { LinkContainer } from "react-router-bootstrap";
 
-import { initializeCountries } from "../features/countries/countriesSlice";
-
-import { clearFavourites } from "../features/countries/favouritesSlice";
+import {
+  clearFavourites,
+  removeFavourites,
+} from "../features/countries/favouritesSlice";
 import { Button } from "react-bootstrap";
 
 const Favourites = () => {
   const dispatch = useDispatch();
-
+  const favouritesList = useSelector((state) => state.favourites.favourites);
   let countriesList = useSelector((state) => state.countries.countries);
   const loading = useSelector((state) => state.countries.isLoading);
   const [search, setSearch] = useState("");
-  const [favouriteList, setFavouriteList] = useState([]);
 
-  if (favouriteList !== null) {
+  if (favouritesList !== null) {
     countriesList = countriesList.filter(
-      (c) => favouriteList.filter((favCoun) => favCoun === c.name.common).length
+      (c) =>
+        favouritesList.filter((favCoun) => favCoun === c.name.common).length
     );
   } else {
     countriesList = [];
   }
 
-  useEffect(() => {
-    dispatch(initializeCountries());
-    setFavouriteList(JSON.parse(localStorage.getItem("favourites")));
-  }, [dispatch]);
-
   // We will be replacing this with data from our API.
-  if (!loading)
+  if (!loading && countriesList.length) {
     return (
       <Container fluid>
         <Row>
@@ -55,26 +50,34 @@ const Favourites = () => {
             </Form>
           </Col>
         </Row>
-        <Row xs={2} md={3} lg={4} className=" g-3">
+        <Row xs={2} md={3} lg={4} className="g-3">
           <Button
             onClick={() => {
               dispatch(clearFavourites());
             }}
-          ></Button>
+          >
+            Clear all
+          </Button>
         </Row>
-
-        <Row xs={2} md={3} lg={4} className=" g-3">
+        <Row xs={2} md={3} lg={4} className="g-3">
           {countriesList
             .filter((c) => {
               return c.name.common.toLowerCase().includes(search.toLowerCase());
             })
             .map((country) => (
-              <Col className="mt-5">
+              <Col className="mt-5" key={country.name.common}>
                 <LinkContainer
                   to={`/countries/${country.name.common}`}
-                  state={{ country: country }}
+                  state={{ selectedCountry: country }}
                 >
                   <Card className="h-100">
+                    <i
+                      className="bi bi-heart-fill text-danger m-1 p-1"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        dispatch(removeFavourites(country.name.common));
+                      }}
+                    ></i>
                     <Card.Body className="d-flex flex-column">
                       <Card.Img
                         variant="top"
@@ -119,6 +122,9 @@ const Favourites = () => {
         </Row>
       </Container>
     );
+  } else {
+    return <h4> No favourite country found</h4>;
+  }
 };
 
 export default Favourites;

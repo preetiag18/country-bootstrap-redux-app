@@ -26,7 +26,10 @@ const App = () => {
           <Route element={<ProtectedRoute user={user} />}>
             <Route path="/countries" element={<Countries />} />
             <Route path="/favourites" element={<Favourites />} />
-            <Route path="/countries/:single" element={<CountriesSingle />} />
+            <Route
+              path="/countries/:countryName"
+              element={<CountriesSingle />}
+            />
           </Route>
         </Route>
       </Routes>
